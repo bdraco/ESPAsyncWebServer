@@ -243,7 +243,7 @@ bool AsyncEventSourceClient::_queueMessage(AsyncEvent_SharedData_t &&msg) {
     forcing Q run will only eat more heap ram and blow the buffer, let's just keep data in our own queue
     the queue will be processed at least on each onAck()/onPoll() call from AsyncTCP
   */
-  if (_messageQueue.size() < SSE_MAX_QUEUED_MESSAGES >> 2 && _client->canSend()) {
+  if (_messageQueue.size() < SSE_MAX_QUEUED_MESSAGES >> 2 && _client && _client->canSend()) {
     _runQueue();
   }
   return true;
@@ -334,7 +334,7 @@ void AsyncEventSourceClient::_runQueue() {
   }
 
   // flush socket
-  if (total_bytes_written) {
+  if (total_bytes_written && _client) {
     _client->send();
   }
 }

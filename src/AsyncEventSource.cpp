@@ -217,8 +217,12 @@ bool AsyncEventSourceClient::_queueMessage(const char *message, size_t len) {
     forcing Q run will only eat more heap ram and blow the buffer, let's just keep data in our own queue
     the queue will be processed at least on each onAck()/onPoll() call from AsyncTCP
   */
-  if (_messageQueue.size() < SSE_MAX_QUEUED_MESSAGES >> 2 && _client->canSend()) {
+  if (_client && _client->canSend() && _messageQueue.size() < SSE_MAX_QUEUED_MESSAGES >> 2) {
     _runQueue();
+
+  } else if (!_client) {
+    _messageQueue.clear();
+    return false;
   }
 
   return true;
@@ -243,9 +247,14 @@ bool AsyncEventSourceClient::_queueMessage(AsyncEvent_SharedData_t &&msg) {
     forcing Q run will only eat more heap ram and blow the buffer, let's just keep data in our own queue
     the queue will be processed at least on each onAck()/onPoll() call from AsyncTCP
   */
-  if (_messageQueue.size() < SSE_MAX_QUEUED_MESSAGES >> 2 && _client && _client->canSend()) {
+  if (_client && _client->canSend() && _messageQueue.size() < SSE_MAX_QUEUED_MESSAGES >> 2) {
     _runQueue();
+
+  } else if (!_client) {
+    _messageQueue.clear();
+    return false;
   }
+
   return true;
 }
 
